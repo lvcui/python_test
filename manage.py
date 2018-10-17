@@ -1,6 +1,14 @@
-from flask import Flask
+# manage为主文件 主要执行该文件
+from info import create_app,db
+from flask_script import Manager
+from flask_migrate import Migrate,MigrateCommand
 
-app = Flask(__name__)
+
+app = create_app("development")
+manager = Manager(app)
+Migrate(app,db)
+manager.add_command('db',MigrateCommand)
+
 
 @app.route("/")
 def index():
@@ -8,4 +16,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    manager.run()

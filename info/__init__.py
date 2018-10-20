@@ -6,7 +6,11 @@ from flask_wtf import CSRFProtect
 from redis import StrictRedis
 from config import config
 import logging
+
+
 db = SQLAlchemy()
+# 设置redis_store为全局变量
+redis_store = None # type:StrictRedis
 
 def setup_log(log_level):
     # 配置日志
@@ -32,12 +36,15 @@ def create_app(config_name):
     # 初始化数据库
     db.init_app(app)
     # 配置redis
-    redis_store = StrictRedis(host=config[config_name].REDIS_HOST,port=config[config_name].REDIS_PORT)
+    global redis_store
+    redis_store = StrictRedis(host=config[config_name].REDIS_HOST,port=config[config_name].REDIS_PORT,decode_responses=True)
     # 开启csrf保护
-    CSRFProtect(app)
+    # CSRFProtect(app)
     # 设置session保存指定位置
     Session(app)
     # 注册蓝图
     from info.modules.index import index_blu
     app.register_blueprint(index_blu)
+    from info.modules.passport import password_blu
+    app.register_blueprint(password_blu)
     return app

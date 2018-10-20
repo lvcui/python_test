@@ -33,10 +33,17 @@ $(function(){
 
 
 	// 点击输入框，提示文字上移
-	$('.form_group').on('click focusin',function(){
-		$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
-	})
+	// $('.form_group').on('click focusin',function(){
+	// 	$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
+	// })
+    $('.form_group').on('click',function(){
+        $(this).children('input').focus()
+    })
 
+    $('.form_group input').on('focusin',function(){
+        $(this).siblings('.input_tip').animate({'top':-5,'font-size':12},'fast')
+        $(this).parent().addClass('hotline');
+    })
 	// 输入框失去焦点，如果输入框为空，则提示文字下移
 	$('.form_group input').on('blur focusout',function(){
 		$(this).parent().removeClass('hotline');
@@ -93,7 +100,7 @@ $(function(){
 		$(this).find('a')[0].click()
 	})
 
-    // TODO 登录表单提交
+    // 登录表单提交
     $(".login_form_con").submit(function (e) {
         e.preventDefault()
         var mobile = $(".login_form #mobile").val()
@@ -110,10 +117,31 @@ $(function(){
         }
 
         // 发起登录请求
+        var params = {
+            "mobile":mobile,
+            "password":password
+        }
+        $.ajax({
+            url:'/passport/login',
+            data:JSON.stringify(params),
+            dataType:"json",
+            contentType:'application/json',
+            type:'POST',
+            success:function (response) {
+                if (response.errno=='0'){
+                    // 登录成功，则刷新页面
+                    location.reload()
+                }else {
+                    // 登录失败，显示错误信息
+                     $("#login-password-err").html(response.errmsg);
+                     $("#login-password-err").show();
+                }
+            }
+        })
     })
 
 
-    // TODO 注册按钮点击
+    // 注册按钮点击
     $(".register_form_con").submit(function (e) {
         // 阻止默认提交操作
         e.preventDefault()
@@ -144,15 +172,56 @@ $(function(){
         }
 
         // 发起注册请求
+        var params={
+            "mobile":mobile,
+            "smscode":smscode,
+            "password":password
+        }
+
+        $.ajax({
+            url:'/passport/register',
+            data:JSON.stringify(params),
+            dataType:"json",
+            contentType:'application/json',
+            type:'POST',
+            success:function (response) {
+                if (response.errno=='0'){
+                    // 若注册成功，则刷新页面
+                    location.reload()
+                }else {
+                    // 若注册未成功，则返回相应的错误信息
+                    alert(response.errmsg)
+                    $("#register-password-err").html(response.errmsg);
+                    $("#register-password-err").show();
+                }
+            }
+        })
 
     })
 })
 
+// 退出功能实现
+function logout () {
+        $.get(
+            '/passport/logout',function (response) {
+                // 刷新页面
+                location.reload()
+            }
+        )
+    }
+
+
 var imageCodeId = ""
 
-// TODO 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
+// 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
 
+    // 生成图片验证码编号
+    imageCodeId = generateUUID()
+    // 拼接图片请求地址
+    var url = '/passport/image_code?imageCodeId=' + imageCodeId
+    // 设置图片src属性
+    $('.get_pic_code').attr('src',url)
 }
 
 // 发送短信验证码
@@ -174,7 +243,56 @@ function sendSMSCode() {
         return;
     }
 
-    // TODO 发送短信验证码
+    // 发送短信验证码
+    params = {
+        "image_code" :imageCode,
+        "image_code_id" : imageCodeId,
+        "mobile":mobile
+    };
+    $.ajax({
+    //    请求地址
+        url:'/passport/sms_code',
+    //    请求数据
+        data:JSON.stringify(params),
+    //    请求方式
+        method:'POST',
+    //    请求数据格式
+        contentType:'application/json',
+    // 响应数据格式
+        dataType:'json',
+        success:function (response) {
+            // 若返回响应错误码为0时，表示短信发送成功
+            if (response.errno == '0'){
+            //    设置计时器60秒后，可再次发送
+                var num =60;
+                var t = setInterval(function () {
+                    if (num == "1"){
+                        // 显示为  点击获取验证码
+                         $(".get_code").html("点击获取验证码");
+                        // 将获取验证码标签设置为可点击
+                        $(".get_code").attr("onclick", "sendSMSCode();");
+                        // 清理计时器
+                        clearInterval(t)
+                    }else {
+                        num -= 1;
+                        // 页面显示为剩余秒数
+                         $(".get_code").html(num+'秒');
+                    }
+                },1000)
+
+            }else {
+                // 显示页面错误信息
+                $("#image-code-err").html(response.errmsg);
+                $("#image-code-err").show();
+                // 将获取验证码标签设置为可点击
+                $(".get_code").attr("onclick", "sendSMSCode();");
+                // 若错误为验证码错误，则重新生成验证码
+                if (response.errno=='4004'){
+                    generateImageCode()
+                }
+            }
+        }
+    })
 }
 
 // 调用该函数模拟点击左侧按钮

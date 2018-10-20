@@ -1,9 +1,9 @@
 # manage为主文件 主要执行该文件
 from flask import current_app
-
-from info import create_app,db
+from info import create_app,db,models
 from flask_script import Manager
 from flask_migrate import Migrate,MigrateCommand
+
 
 
 app = create_app("development")

@@ -6,7 +6,7 @@ class Config(object):
     DEBUG = True
     SECRET_KEY = "EjpNVSNQTyGi1VvWECj9TvC/+kq3oujee2kTfQUs8yCM6xX9Yjq52v54g+HVoknA"
     # 配置数据库
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:123456@127.0.0.1:3306/information'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:123456@127.0.0.1:3306/information_test'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # 配置redis

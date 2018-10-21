@@ -127,6 +127,9 @@ $(function(){
             dataType:"json",
             contentType:'application/json',
             type:'POST',
+            headers:{
+                'X-CSRFToken':getCookie('csrf_token')
+            },
             success:function (response) {
                 if (response.errno=='0'){
                     // 登录成功，则刷新页面
@@ -184,6 +187,9 @@ $(function(){
             dataType:"json",
             contentType:'application/json',
             type:'POST',
+            headers:{
+                'X-CSRFToken':getCookie('csrf_token')
+            },
             success:function (response) {
                 if (response.errno=='0'){
                     // 若注册成功，则刷新页面
@@ -260,6 +266,7 @@ function sendSMSCode() {
         contentType:'application/json',
     // 响应数据格式
         dataType:'json',
+        headers:{"X-CSRFToken":getCookie('csrf_token')},
         success:function (response) {
             // 若返回响应错误码为0时，表示短信发送成功
             if (response.errno == '0'){

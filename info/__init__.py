@@ -3,6 +3,7 @@ from flask import Flask
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 from config import config
 import logging
@@ -39,7 +40,16 @@ def create_app(config_name):
     global redis_store
     redis_store = StrictRedis(host=config[config_name].REDIS_HOST,port=config[config_name].REDIS_PORT,decode_responses=True)
     # 开启csrf保护
-    # CSRFProtect(app)
+    # csrf保护对cookie和表单中csrf_token的值进行校验，需要我们给cookie和表单中设置csrf_token的值
+    CSRFProtect(app)
+    # 由于表单使用ajax实现局部刷新，表单中csrf_token值，可在ajax中设置
+    # 设置cookie中csrf_token
+    @app.after_request
+    def after_request(response):
+        # 调用generate_csrf方法 生成crsf_token
+        csrf_token = generate_csrf()
+        response.set_cookie("csrf_token",csrf_token)
+        return response
     # 设置session保存指定位置
     Session(app)
     # 注册蓝图
